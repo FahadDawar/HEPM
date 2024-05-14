@@ -22,6 +22,9 @@
                     @auth
                         <a href="{{ url('/dashboard') }}" class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Dashboard</a>
                     @endauth
+                    @auth('clinician')
+                    <a href="{{ route('clinician.dashboard') }}" class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Dashboard</a>
+                @endauth
                 </div>
             @endif
 
@@ -47,9 +50,8 @@
                                 <h2 class="mt-6 text-xl font-semibold text-gray-900 dark:text-white">Image Annotatin Web Application</h2>
 
                                 <p class="mt-4 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                                    Sign In to start using the Image Annotation Web Application.
+                                   Clerk Sign In to start using the Image Annotation Web Application.
                                 </p>
-
                                 <button class="py-2 px-3 text-sm font-medium text-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-900">Sign In</button>
 
                             </div>

@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\StoreImageRequest;
 use App\Http\Requests\UpdateImageRequest;
+use App\Notifications\ImageAssignedNotification;
+use Illuminate\Notifications\DatabaseNotification;
 
 class ImageController extends Controller
 {
@@ -26,7 +28,9 @@ class ImageController extends Controller
         ->where('user_id', auth()->id())
         ->latest()->paginate();
 
-        return view('images.index', compact('images', 'onlineClinicians'));
+        $notifications = auth()->user()->unreadNotifications;
+
+        return view('images.index', compact('images', 'onlineClinicians', 'notifications'));
     }
 
     /**
@@ -38,9 +42,15 @@ class ImageController extends Controller
             'clinician_id' => 'required|integer|exists:clinicians,id',
         ]);
 
-        $image->update([
+       $image->update([
             'clinician_id' => $request->clinician_id,
         ]);
+
+        if($image){
+            // send notification to the clinician
+            $clinician = Clinician::find($request->clinician_id);
+            $clinician->notify(new ImageAssignedNotification($image));
+        }
 
         return response()->json([
             'message' => 'Clinician assigned successfully.',
@@ -82,6 +92,37 @@ class ImageController extends Controller
         $decryptedImage = decrypt(Storage::get("encrypted_images/{$filename}"));
 
         return response($decryptedImage)->header('Content-Type', 'image/' . pathinfo($filename, PATHINFO_EXTENSION));
+    }
+
+    // show annotated image along with clinician details
+    public function annotated_image($filename)
+    {
+        $fileArr = explode('&', $filename);
+        $filename = $fileArr[0];
+        $id = $fileArr[1];
+        // dd($filename, $fileArr);
+        if (!$filename){
+            return response()->json([
+                'message' => 'Image not found.',
+            ], 404);
+        }
+        $filename = htmlspecialchars(strip_tags($filename));
+        $id = htmlspecialchars(strip_tags($id));
+        // first check if the payload is valid
+        if (!Storage::exists("encrypted_images/{$filename}")) {
+            return response()->json([
+                'message' => 'Image not found.',
+            ], 404);
+        }
+
+        $image = Image::with('clinician:id,name')->where('filename', $filename)->first();
+
+        // mark as read the notification where the filename is equal to the image filename
+        DatabaseNotification::where('id', $id)->update(['read_at' => now()]);
+
+        return response()->json([
+            'image' =>$image,
+        ]);
     }
 
     // download the image
@@ -150,8 +191,11 @@ class ImageController extends Controller
         if (Storage::exists("encrypted_images/{$image->filename}")) {
             Storage::delete("encrypted_images/{$image->filename}");
         }
-        $image->delete();
 
+        // delete all associated notifications of the image
+        DatabaseNotification::where('data->image_id', $image->id)->delete();
+
+        $image->delete();
         return response()->json([
             'message' => 'Image deleted successfully.',
         ]);

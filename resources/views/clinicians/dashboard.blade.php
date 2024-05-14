@@ -1,4 +1,4 @@
-<x-clinicians.app-layout>
+<x-clinicians.app-layout :notifications="$notifications">
     <x-slot name="header">
         <h2 class="text-xl font-semibold leading-tight text-gray-800">
             {{ __('Dashboard') }}
@@ -101,7 +101,7 @@
         <form action="" method="POST" id="annotateImageForm">
             @csrf
             <div class="space-y-4">
-                <div class="flex items-center center justify-center pt-5">
+                <div class="center flex items-center justify-center pt-5">
                     <div class="items center flex space-x-4">
                         <label for="normal" class="inline-flex items-center">
                             <input type="radio" name="status" id="normal" value="normal" required>
@@ -114,11 +114,14 @@
                     </div>
                 </div>
                 <input type="hidden" name="image_id" id="image_id">
+                <input type="hidden" name="notification_id" id="notification_id">
                 <div>
-                    <input id="note" class="mt-1 mx-1 w-full" placeholder="Write some note here" type="text" name="note" required />
+                    <input id="note" class="mx-1 mt-1 w-full" placeholder="Write some note here" type="text"
+                        name="note" required />
                 </div>
                 <div class="items center flex justify-center space-x-4">
-                    <button class="mb-2 me-2 rounded-lg bg-gradient-to-r from-green-400 via-green-500 to-green-600 px-5 py-2.5 text-center text-sm font-medium text-white shadow-lg shadow-green-500/50 hover:bg-gradient-to-br focus:outline-none focus:ring-4 focus:ring-green-300 dark:shadow-lg dark:shadow-green-800/80 dark:focus:ring-red-800" >Annotate</button>
+                    <button
+                        class="mb-2 me-2 rounded-lg bg-gradient-to-r from-green-400 via-green-500 to-green-600 px-5 py-2.5 text-center text-sm font-medium text-white shadow-lg shadow-green-500/50 hover:bg-gradient-to-br focus:outline-none focus:ring-4 focus:ring-green-300 dark:shadow-lg dark:shadow-green-800/80 dark:focus:ring-red-800">Annotate</button>
                 </div>
             </div>
         </form>
@@ -195,6 +198,7 @@
                 const innotateImageButton = document.querySelectorAll('.innotate-image-button');
                 innotateImageButton.forEach(button => {
                     button.addEventListener('click', function() {
+                        console.log('button clicked');
                         const imageId = this.getAttribute('data-image-id');
                         const imageIdInput = document.querySelector('input[name="image_id"]');
                         imageIdInput.value = imageId;
@@ -207,13 +211,17 @@
                     e.preventDefault();
                     const formData = new FormData(annotateImageForm);
                     const imageId = formData.get('image_id');
+                    const notificationId = formData.get('notification_id');
                     const status = formData.get('status');
                     const note = formData.get('note');
+                    console.log(imageId, notificationId, status, note);
                     try {
                         const response = await axios.post(`/clinician/images/${imageId}/innotate`, {
                             status,
-                            note
+                            note,
+                            notification_id: notificationId
                         });
+
                         if (response.status === 200) {
                             window.location.reload();
                         }

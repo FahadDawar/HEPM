@@ -21,10 +21,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 // Clerk routes
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
 Route::middleware('auth')->group(function () {
 
     // Profile routes
@@ -39,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::get('images', [ImageController::class, 'index'])->name('images');
     Route::post('images', [ImageController::class, 'store'])->name('images.store');
     Route::get('images/{filename}', [ImageController::class, 'show'])->name('images.show');
+    Route::get('images/{filename}/annotated', [ImageController::class, 'annotated_image'])->name('images.annotated');
     Route::delete('images/{image}', [ImageController::class, 'destroy'])->name('images.destroy');
     Route::post('images/{image}/assign-clinician', [ImageController::class, 'assign_clinician'])->name('images.assign.clinician');
     Route::get('images/{filename}/download', [ImageController::class, 'download_image'])->name('images.download');
@@ -52,6 +49,9 @@ Route::middleware('auth')->group(function () {
 
     // Clinician routes
     Route::resource('clinicians', ClinicianController::class);
+
+    // Notification routes
+    Route::get('notifications', [ClerkController::class, 'notifications'])->name('notifications');
 
 });
 

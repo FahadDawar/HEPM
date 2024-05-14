@@ -21,6 +21,7 @@ class Authenticate extends Middleware
         if($request->routeIs('clinician.*')){
             return route('clinician.login');
         }
+        
         return $request->expectsJson() ? null : route('login');
     }
 }

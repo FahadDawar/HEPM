@@ -40,7 +40,6 @@ class ClinicianLoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
-// dd($this->only('email', 'password'));
         if (! Auth::guard('clinician')->attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 

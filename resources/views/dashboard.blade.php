@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :notifications="$notifications">
     <x-slot name="header">
         <h2 class="text-xl font-semibold leading-tight text-gray-800">
             {{ __('Dashboard') }}
@@ -262,7 +262,7 @@
                     modal.style.display = "none";
                 }
 
-                // Delete assigned-image 
+                // Delete assigned-image
                 const deleteAssignedImage = document.querySelectorAll('.delete-assigned-image');
                 deleteAssignedImage.forEach((btn) => {
                     btn.addEventListener('click', async (e) => {

@@ -13,60 +13,32 @@ class ClerkController extends Controller
      */
     public function index()
     {
-       // get all clinicians which has assigned image pending which the relationship is defined in the Clinician model as pendingImage()
-        // $clinicians = Clinician::whereHas('pendingImage')
-        //     ->with('pendingImage')
-        //     ->latest()
-        //     ->paginate();
 
-            $images = Image::whereHas('clinician')
-            ->with('clinician')
-            ->where('user_id', auth()->id())
-            ->where('status', 'pending')
-            ->latest()->paginate();
+        $images = Image::whereHas('clinician')
+        ->with('clinician')
+        ->where('user_id', auth()->id())
+        ->where('status', 'pending')
+        ->latest()->paginate();
 
-            // dd($images);
+        $notifications = auth()->user()->unreadNotifications;
 
-        return view('dashboard', compact('images'));
+
+        return view('dashboard', compact('images', 'notifications'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Get unread notifications
      */
-    public function store(Request $request)
+    public function notifications()
     {
-        //
+        $notifications = auth()->user()->unreadNotifications;
+
+        $notification_count = count($notifications);
+
+        return response()->json([
+            'notifications' => $notifications,
+            'notification_count' => $notification_count
+        ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
 }

@@ -23,10 +23,10 @@ class RedirectIfAuthenticated
                 if($guard == 'admin'){
                     return redirect(RouteServiceProvider::ADMIN_HOME);
                 }
-                if($guard !== 'clinician'){
-                    return redirect(RouteServiceProvider::HOME);
+                if($guard == 'clinician'){
+                    return redirect(RouteServiceProvider::CLINITIAN_HOME);
                 }
-                return redirect(RouteServiceProvider::CLINITIAN_HOME);
+                return redirect(RouteServiceProvider::HOME);
             }
         }
         return $next($request);

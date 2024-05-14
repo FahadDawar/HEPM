@@ -74,5 +74,8 @@ Route::middleware('auth:clinician')->group(function () {
     // Dashboard route
     Route::get('/', [ClinicianController::class, 'dashboard'])->name('dashboard');
 
+    // Notification routes
+    Route::get('notifications', [ClinicianController::class, 'notifications'])->name('notifications');
+
 });
 

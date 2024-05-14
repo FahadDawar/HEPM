@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\ImageInnotateRequest;
 use App\Http\Requests\StoreClinicianRequest;
 use App\Http\Requests\UpdateClinicianRequest;
+use App\Notifications\ImageAnnotatedNotification;
+use Illuminate\Notifications\DatabaseNotification;
 
 class ClinicianController extends Controller
 {
@@ -21,20 +23,23 @@ class ClinicianController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate();
 
-        return view('clinicians', compact('clinicians'));
-    }
+            $notifications = auth()->user()->unreadNotifications;
 
+
+        return view('clinicians', compact('clinicians', 'notifications'));
+    }
     public function dashboard()
     {
         $assignedImages = Image::where('clinician_id', auth('clinician')->id())
             ->orderBy('created_at', 'desc')
             ->paginate();
 
-        // dd($assignedImages);
-        return view('clinicians.dashboard', compact('assignedImages'));
+            $notifications = auth()->user()->unreadNotifications;
+
+            // dd($notifications);
+        return view('clinicians.dashboard', compact('assignedImages', 'notifications'));
 
     }
-
     // download the image
     public function download_image($filename)
     {
@@ -49,9 +54,8 @@ class ClinicianController extends Controller
         return response($decryptedImage)
            ->header('Content-Type', 'image/' . pathinfo($filename, PATHINFO_EXTENSION))
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
-            
-    }
 
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -59,7 +63,6 @@ class ClinicianController extends Controller
     {
         return view('clinicians.index');
     }
-
     /**
      * Store a newly created resource in storage.
      */
@@ -81,7 +84,6 @@ class ClinicianController extends Controller
             'message' => 'Clinician created successfully'
         ], 201);
     }
-
     /**
      * Display the specified resource.
      */
@@ -99,13 +101,52 @@ class ClinicianController extends Controller
 
     public function innotate_image(ImageInnotateRequest $request, Image $image)
     {
-        $image->update([
+
+
+        if($request->has('notification_id')){
+            $id =(string) htmlspecialchars(strip_tags($request->notification_id));
+        }
+
+
+
+        $is_annotated = $image->update([
             'status' => str($request->status)->lower(),
             'note'   => $request->note
         ]);
 
+        if($is_annotated) {
+            $image->user->notify(new ImageAnnotatedNotification($image));
+        }
+
+        // mark the annotated image notification as read for clinician
+        if(! $request->has('notification_id')){
+
+            DatabaseNotification::where('data->image_id', $image->id)
+              ->where('data->user_id', auth('clinician')->id())
+            ->update(['read_at' => now()]);
+        } else {
+            DatabaseNotification::where('id', $id)
+            ->update(['read_at' => now()]);
+        }
+
+
         return response()->json([
-            'message' => 'Image innotated successfully'
+            'message' => 'Image annotated successfully'
+        ]);
+    }
+
+       /**
+     * Get unread notifications
+     */
+    public function notifications()
+    {
+        $notifications = auth('clinician')->user()->unreadNotifications;
+
+        $notification_count = count($notifications);
+
+        return response()->json([
+            'notifications' => $notifications,
+            'notification_count' => $notification_count
         ]);
     }
 
@@ -117,7 +158,6 @@ class ClinicianController extends Controller
 
         return response()->json($clinician);
     }
-
     /**
      * Update the specified resource in storage.
      */
@@ -130,7 +170,6 @@ class ClinicianController extends Controller
             'message' => 'Clinician updated successfully'
         ]);
     }
-
     /**
      * Remove the specified resource from storage.
      */
